@@ -7,8 +7,11 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -23,6 +26,7 @@ public class SnoopInstructionTransformer implements ClassFileTransformer {
   private static String[] banned = {"[", "java/lang", "janala", "org/objectweb/asm", "sun", "jdk", "java/util/function"};
   private static String[] excludes = Config.instance.excludeInst;
   private static String[] includes = Config.instance.includeInst;
+  private static Map<String, List<Map.Entry<String, String>>> classToInst = JSONUtil.loadFunctoinFromStaticAnalysis(Paths.get("/home/vagrant/project/SerDes/out/SerDes.json"));
   public static void premain(String agentArgs, Instrumentation inst) throws ClassNotFoundException {
 
     preloadClasses();
@@ -62,16 +66,20 @@ public class SnoopInstructionTransformer implements ClassFileTransformer {
 
   /** packages that should be excluded from the instrumentation */
   private static boolean shouldExclude(String cname) {
+
+    if (!classToInst.containsKey(cname.replace("/", "."))) {
+      return true;
+    }
     for (String e : banned) {
       if (cname.startsWith(e)) {
         return true;
       }
     }
-    for (String e : includes) {
-      if (cname.startsWith(e)) {
-        return false;
-      }
-    }
+    // for (String e : includes) {
+    //   if (cname.startsWith(e)) {
+    //     return false;
+    //   }
+    // }
     for (String e : excludes) {
       if (cname.startsWith(e)) {
         return true;
@@ -96,7 +104,7 @@ public class SnoopInstructionTransformer implements ClassFileTransformer {
       if (classBeingRedefined != null) {
         print("* ");
       }
-      print("Instrumenting: " + cname + "... ");
+      print("Instrumenting: " + cname + "...\n");    // Class Level, each time instrumenting a .class file
       GlobalStateForInstrumentation.instance.setCid(cname.hashCode());
 
       if (instDir != null) {
@@ -122,7 +130,7 @@ public class SnoopInstructionTransformer implements ClassFileTransformer {
         ClassReader cr = new ClassReader(cbuf);
         ClassWriter cw = new SafeClassWriter(cr,  loader,
                 ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-        ClassVisitor cv = new SnoopInstructionClassAdapter(cw, cname);
+        ClassVisitor cv = new SnoopInstructionClassAdapter(cw, cname, classToInst.get(cname.replace("/", ".")));
 
         cr.accept(cv, 0);
 

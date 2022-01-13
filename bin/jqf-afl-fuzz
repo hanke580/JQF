@@ -153,7 +153,23 @@ afl_options="$afl_options -t 50+"
 # We set a very small timeout for AFL so that it always sets child_timed_out
 # To flag a "hang", AFL checks both that its timer went out and that the target died with SIGKILL.
 # The SIGKILL is sent back by JQF if the real timeout expires, as set below:
-export JVM_OPTS="$JVM_OPTS -Djqf.afl.TIMEOUT=$timeout"
+export JVM_OPTS="$JVM_OPTS -Djqf.afl.TIMEOUT=$timeout 
+-Dio.netty.tryReflectionSetAccessible=true  
+--add-exports java.base/jdk.internal.misc=ALL-UNNAMED 
+--add-exports java.base/jdk.internal.ref=ALL-UNNAMED 
+--add-exports java.base/sun.nio.ch=ALL-UNNAMED 
+--add-exports java.management.rmi/com.sun.jmx.remote.internal.rmi=ALL-UNNAMED 
+--add-exports java.rmi/sun.rmi.registry=ALL-UNNAMED 
+--add-exports java.rmi/sun.rmi.server=ALL-UNNAMED 
+--add-exports java.sql/java.sql=ALL-UNNAMED 
+--add-opens java.base/java.lang.module=ALL-UNNAMED 
+--add-opens java.base/jdk.internal.loader=ALL-UNNAMED 
+--add-opens java.base/jdk.internal.ref=ALL-UNNAMED 
+--add-opens java.base/jdk.internal.reflect=ALL-UNNAMED 
+--add-opens java.base/jdk.internal.math=ALL-UNNAMED 
+--add-opens java.base/jdk.internal.module=ALL-UNNAMED 
+--add-opens java.base/jdk.internal.util.jar=ALL-UNNAMED 
+--add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED" 
 
 # Set classpath for JQF
 export CLASSPATH="$classpath"
@@ -166,8 +182,8 @@ export AFL_SKIP_CPUFREQ=1
 
 # Do a pilot run to make sure that the class/method are JQF fuzz targets
 echo -n "Performing pilot run...."
-tmp_out=$(mktemp $JQF_TMP_DIR/jqf-pilot.XXX)
-head -c 1024 /dev/urandom | "$BIN_DIR/jqf-repro" "$class" "$method" /dev/stdin 1> $tmp_out 2>&1
+# tmp_out=$(mktemp $JQF_TMP_DIR/jqf-pilot.XXX)
+# head -c 1024 /dev/urandom | "$BIN_DIR/jqf-repro" "$class" "$method" /dev/stdin 1> $tmp_out 2>&1
 if [ "$?" -ne 0 ]; then
   echo "  ERROR: Pilot run failed!!!"
   cat "$tmp_out"
