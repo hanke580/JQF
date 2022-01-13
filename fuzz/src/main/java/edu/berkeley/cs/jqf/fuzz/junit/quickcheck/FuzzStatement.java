@@ -115,6 +115,16 @@ public class FuzzStatement extends Statement {
                         StreamBackedRandom randomFile = new StreamBackedRandom(guidance.getInput(), Long.BYTES);
                         SourceOfRandomness random = new FastSourceOfRandomness(randomFile);
                         GenerationStatus genStatus = new NonTrackingGenerationStatus(random);
+
+                        // Control the input
+                        // byte[] tmp1 = {1, 2, 3, 4};
+                        // Integer tmp2 = 2;
+
+                        // args = new Object[] {
+                        //     tmp1,
+                        //     tmp2
+                        // };
+
                         args = generators.stream()
                                 .map(g -> g.generate(random, genStatus))
                                 .toArray();
