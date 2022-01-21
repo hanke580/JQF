@@ -119,12 +119,15 @@ fi
 
 # Generate input seeds if not given
 if [ -z "$input_dir" ]; then
+  echo "input seed dir is NULL"
   RANDOM_SEED_COUNT=5
   RANDOM_SEED_SIZE=1024
   input_dir=$(mktemp -d $JQF_TMP_DIR/jqf-seeds.XXX)
   for i in $(seq $RANDOM_SEED_COUNT); do
     head -c $RANDOM_SEED_SIZE /dev/urandom > "$input_dir/random_seed_$i"
   done
+  else
+    echo "input seed dir is " $input_dir
 fi
 
 class="$1"
